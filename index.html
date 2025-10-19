@@ -5,6 +5,15 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>3D FPS Game - Telegram</title>
     <style>
+        /* Запрет выделения текста для всех элементов */
+        * {
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
         body { 
             margin: 0; 
             padding: 0; 
@@ -44,6 +53,11 @@
             transition: all 0.2s;
             box-shadow: 0 4px 15px rgba(0, 0, 0, 0.3);
             border: 2px solid rgba(255, 255, 255, 0.1);
+            /* Запрет выделения для кнопок */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
         .control-button:active {
             opacity: 1;
@@ -64,6 +78,11 @@
             border-radius: 10px;
             font-size: 14px;
             backdrop-filter: blur(10px);
+            /* Запрет выделения для HUD */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
     </style>
 </head>
@@ -90,6 +109,24 @@
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <script>
+        // Запрещаем контекстное меню (долгое нажатие)
+        document.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Запрещаем выделение текста
+        document.addEventListener('selectstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+        
+        // Запрещаем перетаскивание
+        document.addEventListener('dragstart', function(e) {
+            e.preventDefault();
+            return false;
+        });
+
         class FPSGame {
             constructor() {
                 this.scene = null;
@@ -173,6 +210,10 @@
                 this.renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
                 this.renderer.shadowMap.enabled = true;
                 this.renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+                
+                // Запрещаем выделение на canvas
+                canvas.style.userSelect = 'none';
+                canvas.style.webkitUserSelect = 'none';
             }
 
             createSkybox() {
@@ -456,12 +497,18 @@
                 const right = document.getElementById('right');
                 
                 const addButtonListeners = (button, direction) => {
-                    const handleStart = () => this.moveState[direction] = true;
-                    const handleEnd = () => this.moveState[direction] = false;
+                    const handleStart = (e) => {
+                        e.preventDefault();
+                        this.moveState[direction] = true;
+                    };
+                    const handleEnd = (e) => {
+                        e.preventDefault();
+                        this.moveState[direction] = false;
+                    };
                     
-                    button.addEventListener('touchstart', handleStart);
-                    button.addEventListener('touchend', handleEnd);
-                    button.addEventListener('touchcancel', handleEnd);
+                    button.addEventListener('touchstart', handleStart, { passive: false });
+                    button.addEventListener('touchend', handleEnd, { passive: false });
+                    button.addEventListener('touchcancel', handleEnd, { passive: false });
                     button.addEventListener('mousedown', handleStart);
                     button.addEventListener('mouseup', handleEnd);
                     button.addEventListener('mouseleave', handleEnd);
@@ -484,7 +531,7 @@
                         this.touch.lastY = event.touches[0].clientY;
                         event.preventDefault();
                     }
-                });
+                }, { passive: false });
                 
                 canvas.addEventListener('touchmove', (event) => {
                     if (this.touch.isDragging && event.touches.length === 1) {
@@ -505,7 +552,7 @@
                         this.touch.lastY = event.touches[0].clientY;
                         event.preventDefault();
                     }
-                });
+                }, { passive: false });
                 
                 canvas.addEventListener('touchend', (event) => {
                     this.touch.isDragging = false;
